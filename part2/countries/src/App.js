@@ -6,7 +6,7 @@ import axios from 'axios'
 const App = () => {
   const [ newSearch, setNewSearch ] = useState('')
   const [ countries, setCountries ] = useState([]) 
-  
+
   useEffect(() => {
     axios
       .get('https://restcountries.eu/rest/v2/all')
@@ -22,7 +22,7 @@ const App = () => {
   return (
     <div>
       <Search newSearch={newSearch} handleSearchChange={handleSearchChange} />
-      <Countries countries={countries} newSearch={newSearch} />
+      {newSearch!=='' && <Countries countries={countries} newSearch={newSearch} />}
     </div>
   )
 }
