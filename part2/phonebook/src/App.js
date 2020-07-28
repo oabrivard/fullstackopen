@@ -11,7 +11,6 @@ const App = () => {
   const [ newNumber, setNewNumber ] = useState('')
   
   useEffect(() => {
-    console.log('effect')
     personService
     .getAll()
     .then(initialPersons => {
@@ -44,6 +43,21 @@ const App = () => {
     setNewName('')
     setNewNumber('')
   }
+
+  const deletePerson = id => {
+    const person = persons.find(p => p.id === id)
+
+    if (! window.confirm(`Delete ${person.name} ?`)) { 
+      return
+    }
+
+    personService
+    .suppress(id)
+    .then(data => {
+      console.log(data)
+      setPersons(persons.filter(p => p.id !== id))
+    })
+}
   
   const handlePersonChange = event => {
     setNewName(event.target.value)
@@ -61,7 +75,7 @@ const App = () => {
       <PersonForm addPerson={addPerson} newName={newName} handlePersonChange={handlePersonChange} newNumber={newNumber} handleNumberChange={handleNumberChange} />
       <div>debug: {newName}</div>
       <h3>Numbers</h3>
-      <Persons persons={persons} newFilter={newFilter} />
+      <Persons persons={persons} newFilter={newFilter} deletePerson={deletePerson}/>
     </div>
   )
 }
