@@ -10,7 +10,7 @@ const App = () => {
   const [ persons, setPersons ] = useState([]) 
   const [ newName, setNewName ] = useState('')
   const [ newNumber, setNewNumber ] = useState('')
-  const [notificationMsg, setNotificationMsg] = useState(null)
+  const [notification, setNotification] = useState(null)
   
   useEffect(() => {
     personService
@@ -40,9 +40,11 @@ const App = () => {
         setPersons(persons.map(p => p.id !== person.id ? p : returnedPerson))
       })
       .catch(error => {
-        alert(
-          `the person '${person.name}' was already deleted from server`
-        )
+        setNotification({
+          type: 'error',
+          message: `the person '${person.name}' was already deleted from server`
+        })
+        setTimeout(() => {setNotification(null)}, 5000)
         setPersons(persons.filter(p => p.id !== person.id))
       })   
     } else {
@@ -54,8 +56,11 @@ const App = () => {
       personService
       .create(newPerson)
       .then(returnedPerson => {
-        setNotificationMsg(`Added '${returnedPerson.name}'`)
-        setTimeout(() => {setNotificationMsg(null)}, 5000)
+        setNotification({
+          type: 'success',
+          message: `Added '${returnedPerson.name}'`
+        })
+        setTimeout(() => {setNotification(null)}, 5000)
         setPersons(persons.concat(returnedPerson))
       })
     }
@@ -77,6 +82,14 @@ const App = () => {
       console.log(data)
       setPersons(persons.filter(p => p.id !== id))
     })
+    .catch(error => {
+      setNotification({
+        type: 'error',
+        message: `the person '${person.name}' was already deleted from server`
+      })
+      setTimeout(() => {setNotification(null)}, 5000)
+      setPersons(persons.filter(p => p.id !== id))
+    })      
 }
   
   const handlePersonChange = event => {
@@ -90,7 +103,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-      <Notification message={notificationMsg} />
+      <Notification notification={notification} />
       <Filter newFilter={newFilter} handleFilterChange={handleFilterChange} />
       <h3>Add a new</h3>
       <PersonForm addPerson={addPerson} newName={newName} handlePersonChange={handlePersonChange} newNumber={newNumber} handleNumberChange={handleNumberChange} />
