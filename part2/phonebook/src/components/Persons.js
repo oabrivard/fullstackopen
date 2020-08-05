@@ -8,7 +8,7 @@ const Person = ({person, deletePerson}) => <div>
 const Persons = ({persons,newFilter,deletePerson}) => {
   return (
     <div>
-      {persons.filter(p => p.name.includes(newFilter)).map(p => <Person key={p.id} person={p} deletePerson={() => deletePerson(p.id)}/>)}      
+      {persons.filter(p => p.name.toLowerCase().includes(newFilter.toLowerCase())).map(p => <Person key={p.id} person={p} deletePerson={() => deletePerson(p.id)}/>)}      
     </div>
   );
 };
