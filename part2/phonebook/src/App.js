@@ -40,12 +40,15 @@ const App = () => {
         setPersons(persons.map(p => p.id !== person.id ? p : returnedPerson))
       })
       .catch(error => {
+        const errorMessage = error?.response?.data?.error || 'an error occured on the server'
         setNotification({
           type: 'error',
-          message: `the person '${person.name}' was already deleted from server`
+          message: errorMessage
         })
         setTimeout(() => {setNotification(null)}, 5000)
-        setPersons(persons.filter(p => p.id !== person.id))
+        if (error?.response?.status===404) {
+          setPersons(persons.filter(p => p.id !== person.id))
+        }
       })   
     } else {
       const newPerson = {

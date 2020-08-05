@@ -1,5 +1,6 @@
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 
 let persons = [
     {
@@ -40,6 +41,9 @@ let persons = [
 ]
 
 const app = express()
+
+app.use(cors())
+app.use(express.static('build'))
 app.use(express.json())
 
 morgan.token('json_body', (req) => JSON.stringify(req.body))
@@ -106,14 +110,41 @@ app.post('/api/persons', (req,res) => {
     res.json(person)    
 })
 
+app.put('/api/persons/:id', function (req, res) {
+    const id = Number(req.params.id)
+    const body = req.body
+
+    if (!body.name || !body.number) {
+        return res.status(400).json({
+            error: 'name and number are mandatory'
+        })
+    }
+
+    const existingPerson = persons.find(p => p.name === body.name)    
+    if (!existingPerson) {
+        return res.status(404).json({
+            error: `the person '${body.name}' was already deleted from server`
+        })
+    }
+
+    const person = {
+        name: body.name,
+        number: body.number,
+        id: id
+    }
+
+    persons = persons.map(p => p.id !== id ? p : person)
+
+    res.json(person)    
+})
+
 const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
 
-const port = 3001
-
-app.listen(port, () => {
-  console.log(`Phonebook backend app listening at http://localhost:${port}`)
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
+  console.log(`Phonebook backend app listening at http://localhost:${PORT}`)
 })

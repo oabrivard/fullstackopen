@@ -6,7 +6,11 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:ui": "[[ -a Procfile ]] && rm -rf build && cd ../../fullstackopen/part2/phonebook && npm run build --prod && cp -r build ../../../fullstackopen.deploy/phonebook-backend/ && rm -rf build && cd ../../../fullstackopen.deploy/phonebook-backend",
+    "deploy": "[[ -a Procfile ]] && git push heroku master",
+    "deploy:full": "[[ -a Procfile ]] && npm run build:ui && git add . && git commit -m uibuild && npm run deploy",    
+    "logs:prod": "[[ -a Procfile ]] && heroku logs --tail"
   },
   "author": "Olivier Abrivard",
   "license": "MIT",
@@ -15,6 +19,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
+    "cors": "^2.8.5",
     "morgan": "^1.10.0"
   }
 }
