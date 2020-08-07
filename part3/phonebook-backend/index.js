@@ -96,22 +96,24 @@ app.post('/api/persons', (req,res) => {
         })
     }
 
+    /*
     const existingPerson = persons.find(p => p.name === body.name)    
     if (existingPerson) {
         return res.status(400).json({
             error: 'name must be unique'
         })
     }
-
-    const person = {
+    */
+   
+    const person = new Person({
         name: body.name,
-        number: body.number,
-        id: getRandomID(),
-    }
+        number: body.number
+    })
 
-    persons = persons.concat(person)
+    person.save().then(savedPerson => {
+        res.json(savedPerson)
+    })
 
-    res.json(person)    
 })
 
 app.put('/api/persons/:id', function (req, res) {

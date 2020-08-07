@@ -66,6 +66,17 @@ const App = () => {
         setTimeout(() => {setNotification(null)}, 5000)
         setPersons(persons.concat(returnedPerson))
       })
+      .catch(error => {
+        const errorMessage = error?.response?.data?.error || 'an error occured on the server'
+        setNotification({
+          type: 'error',
+          message: errorMessage
+        })
+        setTimeout(() => {setNotification(null)}, 5000)
+        if (error?.response?.status===404) {
+          setPersons(persons.filter(p => p.id !== person.id))
+        }
+      })   
     }
 
     setNewName('')
