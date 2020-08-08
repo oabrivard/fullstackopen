@@ -4,52 +4,12 @@ const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/person')
 
-let persons = [
-    {
-        name: "Arto Hellas",
-        number: "040-123456",
-        id: 1
-    },
-    {
-        name: "Dan Abramov",
-        number: "12-43-234345",
-        id: 2
-    },
-    {
-        name: "Mary Poppendieck",
-        number: "39-23-6423122",
-        id: 3
-    },
-    {
-        name: "Soiz",
-        number: "2345",
-        id: 4
-    },
-    {
-        name: "oli",
-        number: "2390",
-        id: 5
-    },
-    {
-        name: "titi",
-        number: "1234",
-        id: 6
-    },
-    {
-        name: "toto",
-        number: "12",
-        id: 7
-    }
-]
-
 const app = express()
-
 app.use(cors())
 app.use(express.static('build'))
 app.use(express.json())
 
 morgan.token('json_body', (req) => JSON.stringify(req.body))
-
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :json_body'))
 
 app.get('/', (req, res) => {
@@ -57,9 +17,11 @@ app.get('/', (req, res) => {
 })
 
 app.get('/info', (req, res) => {
-    const title = `Phonebook has info for ${persons.length} ${persons.length > 1 ? 'people' : 'person'}`
-    const date = new Date().toString()
-    res.send(`<p>${title}</<p><p>${date}</<p>`)
+    Person.find({}).then(persons => {
+        const title = `Phonebook has info for ${persons.length} ${persons.length > 1 ? 'people' : 'person'}`
+        const date = new Date().toString()
+        res.send(`<p>${title}</<p><p>${date}</<p>`)
+    })
 })
 
 app.get('/api/persons', (req,res) => {
@@ -68,81 +30,78 @@ app.get('/api/persons', (req,res) => {
     })
 })
 
-app.get('/api/persons/:id', (req,res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(p => p.id === id)
-
-    if (person) {
-        res.json(person)
-    } else {
-        res.sendStatus(404)
-    }
+app.get('/api/persons/:id', (req,res, next) => {
+    Person.findById(req.params.id).then(person => {
+        if (person) {
+            res.json(person)
+        } else {
+            res.sendStatus(404)
+        }
+    }).catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req,res) => {
-    Person.findByIdAndRemove(req.params.id)
-        .then(result => {
-            res.status(204).end()
-        })
+app.delete('/api/persons/:id', (req, res, next) => {
+    Person.findByIdAndRemove(req.params.id).then(result => {
+        res.status(204).end()
+    }).catch(error => next(error))
 })
 
-const getRandomID = () => Math.floor(Math.random() * Math.floor(10000))
-
-app.post('/api/persons', (req,res) => {
+app.post('/api/persons', (req, res, next) => {
     const body = req.body
 
     if (!body.name || !body.number) {
-        return res.status(400).json({
-            error: 'name and number are mandatory'
-        })
+        var e = new Error('name and number are mandatory')
+        e.name = 'ParameterError'
+        next(e)
     }
 
-    /*
-    const existingPerson = persons.find(p => p.name === body.name)    
-    if (existingPerson) {
-        return res.status(400).json({
-            error: 'name must be unique'
+   Person.findOne({ name: body.name })
+    .then(foundPerson => {
+        if (foundPerson) {
+            var e = new Error(`the person '${body.name}' already exists`)
+            e.name = 'AlreadyExistsError'
+            throw e
+        }
+
+        const person = new Person({
+            name: body.name,
+            number: body.number
         })
-    }
-    */
-
-    const person = new Person({
-        name: body.name,
-        number: body.number
-    })
-
-    person.save().then(savedPerson => {
+    
+        return person.save()
+    }).then(savedPerson => {
         res.json(savedPerson)
+    }).catch(error => {
+        next(error)
     })
-
 })
 
-app.put('/api/persons/:id', function (req, res) {
-    const id = Number(req.params.id)
+app.put('/api/persons/:id', function (req, res, next) {
     const body = req.body
 
     if (!body.name || !body.number) {
-        return res.status(400).json({
-            error: 'name and number are mandatory'
-        })
-    }
-
-    const existingPerson = persons.find(p => p.name === body.name)    
-    if (!existingPerson) {
-        return res.status(404).json({
-            error: `the person '${body.name}' was already deleted from server`
-        })
+        var e = new Error('name and number are mandatory')
+        e.name = 'ParameterError'
+        next(e)
     }
 
     const person = {
         name: body.name,
-        number: body.number,
-        id: id
+        number: body.number
     }
 
-    persons = persons.map(p => p.id !== id ? p : person)
+    Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => {
+        if (!updatedPerson) {
+            var e = new Error(`the person '${body.name}' was already deleted from server`)
+            e.name = 'AlreadyDeletedError'
+            throw e
+        }
 
-    res.json(person)    
+        res.json(updatedPerson)
+    }).catch(error => {
+        next(error)
+    })
 })
 
 const unknownEndpoint = (request, response) => {
@@ -150,6 +109,24 @@ const unknownEndpoint = (request, response) => {
 }
 
 app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    switch(error.name) {
+        case 'CastError': 
+            return response.status(400).send({ error: 'malformatted id' })
+        case 'AlreadyExistsError':
+        case 'ParameterError':
+            return response.status(400).send({ error: error.message })
+        case 'AlreadyDeletedError':
+            return response.status(404).send({ error: error.message })
+    }
+
+    next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

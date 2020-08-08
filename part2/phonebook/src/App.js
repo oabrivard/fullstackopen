@@ -37,6 +37,11 @@ const App = () => {
       personService
       .update(person.id, changedPerson)
       .then(returnedPerson => {
+        setNotification({
+          type: 'success',
+          message: `Updated '${returnedPerson.name}'`
+        })
+        setTimeout(() => {setNotification(null)}, 5000)
         setPersons(persons.map(p => p.id !== person.id ? p : returnedPerson))
       })
       .catch(error => {
