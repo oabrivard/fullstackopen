@@ -24,13 +24,13 @@ app.get('/info', (req, res) => {
     })
 })
 
-app.get('/api/persons', (req,res) => {
+app.get('/api/persons', (req, res) => {
     Person.find({}).then(persons => {
         res.json(persons)
     })
 })
 
-app.get('/api/persons/:id', (req,res, next) => {
+app.get('/api/persons/:id', (req, res, next) => {
     Person.findById(req.params.id).then(person => {
         if (person) {
             res.json(person)
@@ -49,31 +49,18 @@ app.delete('/api/persons/:id', (req, res, next) => {
 app.post('/api/persons', (req, res, next) => {
     const body = req.body
 
-    if (!body.name || !body.number) {
-        var e = new Error('name and number are mandatory')
-        e.name = 'ParameterError'
-        next(e)
-    }
-
-   Person.findOne({ name: body.name })
-    .then(foundPerson => {
-        if (foundPerson) {
-            var e = new Error(`the person '${body.name}' already exists`)
-            e.name = 'AlreadyExistsError'
-            throw e
-        }
-
-        const person = new Person({
-            name: body.name,
-            number: body.number
-        })
-    
-        return person.save()
-    }).then(savedPerson => {
-        res.json(savedPerson)
-    }).catch(error => {
-        next(error)
+    const person = new Person({
+        name: body.name,
+        number: body.number
     })
+
+    person.save()
+        .then(savedPerson => {
+            res.json(savedPerson)
+        })
+        .catch(error => {
+            next(error)
+        })
 })
 
 app.put('/api/persons/:id', function (req, res, next) {
@@ -91,17 +78,17 @@ app.put('/api/persons/:id', function (req, res, next) {
     }
 
     Person.findByIdAndUpdate(req.params.id, person, { new: true })
-    .then(updatedPerson => {
-        if (!updatedPerson) {
-            var e = new Error(`the person '${body.name}' was already deleted from server`)
-            e.name = 'AlreadyDeletedError'
-            throw e
-        }
+        .then(updatedPerson => {
+            if (!updatedPerson) {
+                var e = new Error(`the person '${body.name}' was already deleted from server`)
+                e.name = 'AlreadyDeletedError'
+                throw e
+            }
 
-        res.json(updatedPerson)
-    }).catch(error => {
-        next(error)
-    })
+            res.json(updatedPerson)
+        }).catch(error => {
+            next(error)
+        })
 })
 
 const unknownEndpoint = (request, response) => {
@@ -113,9 +100,10 @@ app.use(unknownEndpoint)
 const errorHandler = (error, request, response, next) => {
     console.error(error.message)
 
-    switch(error.name) {
-        case 'CastError': 
+    switch (error.name) {
+        case 'CastError':
             return response.status(400).send({ error: 'malformatted id' })
+        case 'ValidationError':
         case 'AlreadyExistsError':
         case 'ParameterError':
             return response.status(400).send({ error: error.message })
@@ -130,5 +118,5 @@ app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
-  console.log(`Phonebook backend app listening at http://localhost:${PORT}`)
+    console.log(`Phonebook backend app listening at http://localhost:${PORT}`)
 })

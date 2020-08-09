@@ -29,32 +29,12 @@ const App = () => {
 
     const person = persons.find(p => p.name.toLowerCase() === newName.toLowerCase())
     if (person) {
-      if (! window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) { 
-        return
-      }
-
-      const changedPerson = { ...person, number: newNumber }
-      personService
-      .update(person.id, changedPerson)
-      .then(returnedPerson => {
-        setNotification({
-          type: 'success',
-          message: `Updated '${returnedPerson.name}'`
-        })
-        setTimeout(() => {setNotification(null)}, 5000)
-        setPersons(persons.map(p => p.id !== person.id ? p : returnedPerson))
+      setNotification({
+        type: 'error',
+        message: `${newName} is already added to phonebook`
       })
-      .catch(error => {
-        const errorMessage = error?.response?.data?.error || 'an error occured on the server'
-        setNotification({
-          type: 'error',
-          message: errorMessage
-        })
-        setTimeout(() => {setNotification(null)}, 5000)
-        if (error?.response?.status===404) {
-          setPersons(persons.filter(p => p.id !== person.id))
-        }
-      })   
+
+      setTimeout(() => {setNotification(null)}, 5000)
     } else {
       const newPerson = {
         name : newName,
