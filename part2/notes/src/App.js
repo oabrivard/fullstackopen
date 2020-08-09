@@ -47,7 +47,12 @@ const App = (props) => {
         setNotes(notes.concat(returnedNote))
         setNewNote('')
       })
-  }
+      .catch(error => {
+        const errorMessage = error?.response?.data?.error || 'an error occured on the server'
+        setErrorMessage(errorMessage)
+        setTimeout(() => {setErrorMessage(null)}, 5000)
+      })   
+}
 
   const handleNoteChange = (event) => {
     setNewNote(event.target.value)
