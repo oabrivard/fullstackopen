@@ -1,0 +1,9 @@
+POST http://localhost:3003/api/blogs HTTP/1.1
+Content-Type: application/json
+
+{
+    "title": "Blog de Louis Nauges",
+    "author": "Louis Nauges",
+    "url": "https://nauges.typepad.com/",
+    "likes": 0
+}
