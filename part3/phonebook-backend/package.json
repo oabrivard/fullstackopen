@@ -7,7 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint .",    
+    "lint": "eslint .",
     "build:ui": "[[ -a Procfile ]] && rm -rf build && cd ../../fullstackopen/part2/phonebook && npm run build --prod && cp -r build ../../../fullstackopen.deploy/fullstackopen-phonebook-backend/ && rm -rf build && cd ../../../fullstackopen.deploy/fullstackopen-phonebook-backend",
     "deploy": "[[ -a Procfile ]] && git push heroku master",
     "deploy:full": "[[ -a Procfile ]] && npm run build:ui && git add . && git commit --allow-empty -m uibuild && npm run deploy",
