@@ -64,6 +64,40 @@ test('likes is set to 0 if not given for a new blog', async () => {
   expect(blogInDb.likes).toBe(0)
 })
 
+test('blog without title or url is not added', async () => {
+  const newBlog1 = {
+    author: 'Louis Nauges',
+    url: 'https://nauges.typepad.com/'
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog1)
+    .expect(400)
+
+  const newBlog2 = {
+    title: 'Blog de Louis Nauges',
+    author: 'Louis Nauges'
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog2)
+    .expect(400)
+
+  const newBlog3 = {
+    author: 'Louis Nauges'
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog3)
+    .expect(400)
+
+  const blogsAtEnd = await helper.blogsInDb()
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+})
+
 afterAll(() => {
   mongoose.connection.close()
 })
