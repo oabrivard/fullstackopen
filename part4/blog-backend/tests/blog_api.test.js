@@ -12,6 +12,7 @@ beforeEach(async () => {
   const promiseArray = blogs.map(blog => blog.save())
   await Promise.all(promiseArray)
 })
+
 describe('when there is initially some blogs saved', () => {
   test('all blogs are returned as json', async () => {
     const response = await api.get('/api/blogs')
@@ -45,8 +46,8 @@ describe('addition of a new blog', () => {
     const blogsAtEnd = await helper.blogsInDb()
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
 
-    const contents = blogsAtEnd.map(b => b.title)
-    expect(contents).toContain(newBlog.title)
+    const titles = blogsAtEnd.map(b => b.title)
+    expect(titles).toContain(newBlog.title)
   })
 
   test('likes is set to 0 if not given for a new blog', async () => {
@@ -116,9 +117,34 @@ describe('deletion of a blog', () => {
       helper.initialBlogs.length - 1
     )
 
-    const contents = blogsAtEnd.map(b => b.title)
+    const titles = blogsAtEnd.map(b => b.title)
 
-    expect(contents).not.toContain(blogToDelete.title)
+    expect(titles).not.toContain(blogToDelete.title)
+  })
+})
+
+describe('update of a blog', () => {
+  test('succeeds with status code 200 if id is valid', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToUpdate = blogsAtStart[0]
+
+    await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send({ likes: 100 })
+      .expect(200)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    const updatedBlog = blogsAtEnd.find(b => b.id == blogToUpdate.id)
+
+    expect(updatedBlog.likes).toBe(100)
+  })
+
+  test('fails with status code 404 if id is invalid', async () => {
+    await api
+      .put('/api/blogs/111111111111111111111111')
+      .send({ likes: 100 })
+      .expect(404)
+
   })
 })
 
